@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Character Studio 3D — Creator</title>
+<style>
+:root{--bg:#101827;--panel:#1c293b;--card:#26364c;--line:#3b4b63;--txt:#f7f8fc;--muted:#b5c2d4;--pink:#f472b6;--violet:#8b7cf6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:13px 17px;background:#0a1220;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:18px;margin:0}header small{color:var(--muted)}.tag{font-size:11px;background:#29384e;border:1px solid var(--line);padding:5px 9px;border-radius:30px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 355px;min-height:calc(100vh - 57px)}
+#stage{position:relative;min-height:650px;background:linear-gradient(#b9d8eb,#e8d9d1 68%,#b4c49e)}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hint{position:absolute;bottom:12px;left:12px;background:#101827d9;padding:8px 11px;border-radius:10px;font-size:11px;color:white}
+#panel{padding:13px;overflow:auto;max-height:calc(100vh - 57px);background:var(--panel)}
+.card{padding:12px;background:var(--card);border:1px solid #35465d;border-radius:13px;margin-bottom:11px}
+h2{font-size:14px;margin:0 0 9px;color:#f9b8dc}
+label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;margin:9px 0 4px}
+select,button{width:100%;padding:9px;border:1px solid #465872;border-radius:9px;background:#34465f;color:white;font:inherit}
+button{cursor:pointer;font-weight:650}button.primary{background:linear-gradient(90deg,#d94f9c,#8064eb);border:0}button.sub{background:#34465f}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+input[type=range]{width:100%;accent-color:#f472b6}
+input[type=color]{width:100%;height:35px;border:0;background:none}
+.small{font-size:11px;line-height:1.5;color:var(--muted);margin:8px 0 0}
+.check{display:flex;align-items:center;gap:8px;font-size:12px;color:#e5eaf2;margin:8px 0}.check input{accent-color:#e879b5}
+@media(max-width:800px){.layout{grid-template-columns:1fr}#stage{min-height:53vh}#panel{max-height:none}}
+</style>
+</head>
+<body>
+<header><div><h1>✨ Character Studio 3D</h1><small>ตัวสร้างตัวละคร 3 มิติ • ตัวละครสมมติวัยผู้ใหญ่</small></div><span class="tag">Creator Edition</span></header>
+<div class="layout">
+<main id="stage"><canvas id="view"></canvas><div class="hint">ลากเพื่อหมุนกล้อง • เลื่อนเพื่อซูม • ใช้นิ้วแตะ/ลากบนมือถือ</div></main>
+<aside id="panel">
+ <section class="card"><h2>ตัวละคร</h2>
+  <label>เลือกตัวละคร</label><select id="who"><option value="woman">หญิง</option><option value="man">ชาย</option></select>
+  <div class="row" style="margin-top:9px"><button id="swap" class="sub">สลับตำแหน่ง</button><button id="reset" class="sub">รีเซ็ตตัวละคร</button></div>
+ </section>
+ <section class="card"><h2>รูปร่างและสัดส่วน</h2>
+  <label>ส่วนสูง <output id="heightV">100%</output></label><input id="height" type="range" min="85" max="115" value="100">
+  <label>ความกว้างลำตัว <output id="buildV">100%</output></label><input id="build" type="range" min="75" max="130" value="100">
+  <label>ความกว้างไหล่ <output id="shoulderV">100%</output></label><input id="shoulder" type="range" min="75" max="130" value="100">
+  <label>ความยาวขา <output id="legV">100%</output></label><input id="leg" type="range" min="85" max="115" value="100">
+  <label>ขนาดศีรษะ <output id="headV">100%</output></label><input id="head" type="range" min="85" max="115" value="100">
+ </section>
+ <section class="card"><h2>สีผิวและใบหน้า</h2>
+  <label>โทนสีผิว</label><select id="skin"><option value="#f5d0b5">ขาวอมชมพู</option><option value="#e8b894" selected>ผิวธรรมชาติ</option><option value="#c98e69">ผิวแทน</option><option value="#9b654b">น้ำตาลเข้ม</option><option value="#704631">น้ำตาลเข้มมาก</option></select>
+  <label>สีผม</label><select id="hair"><option value="#30231f">ดำ</option><option value="#68432d">น้ำตาล</option><option value="#d5ad54">บลอนด์</option><option value="#a83d48">แดง</option><option value="#7562b5">ม่วง</option><option value="#e7e7ed">เงิน</option></select>
+  <label>ทรงผม</label><select id="hairStyle"><option value="short">สั้น</option><option value="long">ยาว</option><option value="spiky">ตั้ง/แหลม</option><option value="bob">บ๊อบ</option></select>
+  <label>สีตา</label><select id="eyes"><option value="#34251e">น้ำตาล</option><option value="#4b83a5">ฟ้า</option><option value="#4b875e">เขียว</option><option value="#222222">ดำ</option></select>
+ </section>
+ <section class="card"><h2>เสื้อผ้าและสไตล์</h2>
+  <label>ชุดหลัก</label><select id="outfit"><option value="#e85b9e">ชุดชมพู</option><option value="#3978c9">ชุดน้ำเงิน</option><option value="#32966c">ชุดเขียว</option><option value="#e5a33c">ชุดเหลือง</option><option value="#535d70">ชุดเทา</option><option value="#f0eee9">ชุดขาว</option></select>
+  <label>ชุดคลุม</label><select id="jacket"><option value="none">ไม่ใส่ชุดคลุม</option><option value="#343b50">แจ็กเก็ตสีเข้ม</option><option value="#a64f70">แจ็กเก็ตสีไวน์</option><option value="#e7e8ec">แจ็กเก็ตสีอ่อน</option></select>
+  <label class="check"><input id="accessory" type="checkbox" checked> ใส่เครื่องประดับ</label>
+  <label class="check"><input id="shoes" type="checkbox" checked> ใส่รองเท้า</label>
+  <p class="small">สามารถเปลี่ยนชุดคลุมและสไตล์ได้ โดยตัวละครยังสวมชุดพื้นฐานที่เหมาะสมอยู่เสมอ</p>
+ </section>
+ <section class="card"><h2>ท่าทางและการเคลื่อนไหว</h2>
+  <div class="three"><button class="sub pose" data-p="stand">ยืน</button><button class="sub pose" data-p="sit">นั่ง</button><button class="sub pose" data-p="wave">โบกมือ</button><button class="sub pose" data-p="walk">เดิน</button><button class="sub pose" data-p="arms">กอดอก</button><button class="sub pose" data-p="relax">ผ่อนคลาย</button></div>
+  <label>แขนซ้าย <output id="laV">0°</output></label><input id="la" type="range" min="-100" max="100" value="0">
+  <label>แขนขวา <output id="raV">0°</output></label><input id="ra" type="range" min="-100" max="100" value="0">
+  <label>ขาซ้าย <output id="llV">0°</output></label><input id="ll" type="range" min="-65" max="65" value="0">
+  <label>ขาขวา <output id="rlV">0°</output></label><input id="rl" type="range" min="-65" max="65" value="0">
+  <label>เอียงลำตัว <output id="tiltV">0°</output></label><input id="tilt" type="range" min="-30" max="30" value="0">
+  <label>หมุนตัว <output id="turnV">0°</output></label><input id="turn" type="range" min="-180" max="180" value="0">
+ </section>
+ <section class="card"><h2>ฉากและบันทึก</h2>
+  <label>สถานที่</label><select id="scene"><option value="room">ห้องสตูดิโอ</option><option value="park">สวน</option><option value="stage">เวที</option><option value="sunset">พระอาทิตย์ตก</option></select>
+  <div class="row" style="margin-top:9px"><button id="save" class="primary">บันทึกตัวละคร</button><button id="load" class="sub">โหลดตัวละคร</button></div>
+  <p id="status" class="small">ยังไม่มีข้อมูลที่บันทึกไว้</p>
+ </section>
+ <p class="small">ต้นแบบนี้ใช้ตัวละครผู้ใหญ่สมมติ เน้นการปรับแต่งรูปลักษณ์ เสื้อผ้า และท่าทางทั่วไป ไม่รองรับภาพเปลือยหรือกิจกรรมทางเพศโจ่งแจ้ง</p>
+</aside></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+const stage=document.querySelector('#stage'),renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.setSize(stage.clientWidth,stage.clientHeight);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#c8dfed');
+const camera=new THREE.PerspectiveCamera(35,stage.clientWidth/stage.clientHeight,.1,100);camera.position.set(0,3.1,9);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.35,0);controls.enableDamping=true;
+scene.add(new THREE.HemisphereLight(0xffffff,0x7a8798,2));
+const light=new THREE.DirectionalLight(0xffffff,2.2);light.position.set(-3,7,5);light.castShadow=true;scene.add(light);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:'#c9c1b6'}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+const mat=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:.78});
+function ell(parent,name,pos,scale,material){const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material);m.name=name;m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;parent.add(m);return m}
+function rod(parent,name,a,b,r,material){const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A);const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,Math.max(.01,d.length()-2*r),5,12),material);m.name=name;m.position.copy(A).add(B).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());m.castShadow=true;parent.add(m);return m}
+function character(x,kind,shirt){const root=new THREE.Group();root.position.x=x;scene.add(root);const rig=new THREE.Group();root.add(rig);
+ const c={skin:mat('#e8b894'),hair:mat('#30231f'),shirt:mat(shirt),pants:mat('#39445d'),shoe:mat('#263449'),eye:mat('#34251e'),jacket:mat('#343b50'),white:mat('#f8fafc')};
+ const body=ell(rig,'body',[0,1.36,0],[.34,.53,.2],c.shirt),pelvis=ell(rig,'pelvis',[0,.88,0],[.3,.22,.19],c.pants);
+ const head=ell(rig,'head',[0,2.12,0],[.28,.34,.26],c.skin),hair=ell(rig,'hair',[0,2.34,-.035],[.29,.2,.27],c.hair);
+ const eyes=[ell(rig,'eyeL',[-.095,2.16,.225],[.025,.035,.018],c.eye),ell(rig,'eyeR',[.095,2.16,.225],[.025,.035,.018],c.eye)];
+ const mouth=ell(rig,'smile',[0,2.035,.246],[.055,.012,.012],mat('#9f4b55'));
+ const jacket=ell(rig,'jacket',[0,1.38,-.025],[.37,.55,.205],c.jacket);jacket.visible=false;
+ const arms=[],legs=[];
+ for(const s of [-1,1]){const sh=new THREE.Group();sh.position.set(s*.37,1.72,0);rig.add(sh);rod(sh,'upper',[0,0,0],[s*.03,-.36,0],.105,c.skin);const el=new THREE.Group();el.position.set(s*.03,-.36,0);sh.add(el);rod(el,'forearm',[0,0,0],[s*.015,-.34,.015],.085,c.skin);ell(el,'hand',[s*.015,-.37,.02],[.09,.1,.08],c.skin);arms.push({sh,el,s});
+ const hip=new THREE.Group();hip.position.set(s*.16,.82,0);rig.add(hip);rod(hip,'thigh',[0,0,0],[0,-.42,0],.13,c.pants);const knee=new THREE.Group();knee.position.set(0,-.42,0);hip.add(knee);rod(knee,'shin',[0,0,0],[0,-.37,.015],.105,c.pants);const shoe=ell(knee,'shoe',[0,-.39,.09],[.13,.08,.22],c.shoe);legs.push({hip,knee,shoe,s});}
+ const necklace=ell(rig,'necklace',[0,1.78,.18],[.12,.035,.025],mat('#e9c46a'));
+ const ear1=ell(rig,'ear1',[-.285,2.12,0],[.055,.075,.05],c.skin),ear2=ell(rig,'ear2',[.285,2.12,0],[.055,.075,.05],c.skin);
+ const jacketButtons=[];for(let y=1.58;y>1.15;y-=.14)jacketButtons.push(ell(rig,'button',[0,y,.18],[.018,.018,.012],c.white));
+ return {root,rig,kind,c,body,pelvis,head,hair,eyes,jacket,arms,legs,necklace,ears:[ear1,ear2],buttons:jacketButtons};
+}
+const female=character(-1,'woman','#e85b9e'),male=character(1,'man','#3978c9');let active=female;
+const defaults={height:100,build:100,shoulder:100,leg:100,head:100,la:0,ra:0,ll:0,rl:0,tilt:0,turn:0};
+const poses={stand:{la:0,ra:0,ll:0,rl:0,tilt:0,turn:0},sit:{la:8,ra:-8,ll:55,rl:-55,tilt:5,turn:0},wave:{la:-75,ra:0,ll:0,rl:0,tilt:0,turn:0},walk:{la:22,ra:-22,ll:-25,rl:25,tilt:0,turn:0},arms:{la:55,ra:-55,ll:0,rl:0,tilt:0,turn:0},relax:{la:18,ra:-18,ll:8,rl:-8,tilt:-5,turn:0}};
+function val(id){return +document.getElementById(id).value}
+function update(ch,p=read()){const h=p.height/100,b=p.build/100,s=p.shoulder/100,l=p.leg/100,hd=p.head/100;
+ ch.root.scale.y=h;ch.body.scale.set(.34*b,.53,.2);ch.body.position.y=1.36;ch.pelvis.scale.x=.3*b;ch.head.scale.set(.28*hd,.34*hd,.26*hd);ch.head.position.y=2.12;
+ ch.hair.scale.set(.29*hd,.2*hd,.27*hd);ch.hair.position.y=2.34;
+ ch.arms.forEach((a,i)=>{a.sh.position.x=a.s*.37*s;a.sh.rotation.z=THREE.MathUtils.degToRad(i===0?p.la:-p.ra)});
+ ch.legs.forEach((a,i)=>{a.hip.position.y=.82*l;a.hip.rotation.z=THREE.MathUtils.degToRad(i===0?p.ll:-p.rl);a.knee.scale.y=l});
+ ch.rig.rotation.z=THREE.MathUtils.degToRad(p.tilt);ch.rig.rotation.y=THREE.MathUtils.degToRad(p.turn);
+}
+function read(){return Object.fromEntries(['height','build','shoulder','leg','head','la','ra','ll','rl','tilt','turn'].map(k=>[k,val(k)]))}
+function labels(){for(const k of Object.keys(defaults)){const o=document.getElementById(k+'V');if(o)o.textContent=val(k)+(k==='height'||k==='build'||k==='shoulder'||k==='leg'||k==='head'?'%':'°')}}
+function apply(){labels();update(active)}
+function selectActive(){active=document.querySelector('#who').value==='woman'?female:male;syncLook()}
+function syncLook(){const c=active.c;c.skin.color.set(document.querySelector('#skin').value);c.hair.color.set(document.querySelector('#hair').value);c.eye.color.set(document.querySelector('#eyes').value);c.shirt.color.set(document.querySelector('#outfit').value);
+ const j=document.querySelector('#jacket').value;active.jacket.visible=j!=='none';if(j!=='none')c.jacket.color.set(j);
+ const style=document.querySelector('#hairStyle').value;active.hair.scale.y=style==='long'?.38:style==='spiky'?.13:style==='bob'?.27:.2;active.hair.scale.x=style==='spiky'?.25:.29;
+ active.necklace.visible=document.querySelector('#accessory').checked;active.ears.forEach(e=>e.visible=document.querySelector('#accessory').checked);active.buttons.forEach(e=>e.visible=active.jacket.visible);active.legs.forEach(l=>l.shoe.visible=document.querySelector('#shoes').checked);
+}
+document.querySelector('#who').onchange=selectActive;
+['skin','hair','eyes','hairStyle','outfit','jacket','accessory','shoes'].forEach(id=>document.getElementById(id).addEventListener('change',syncLook));
+['height','build','shoulder','leg','head','la','ra','ll','rl','tilt','turn'].forEach(id=>document.getElementById(id).addEventListener('input',apply));
+document.querySelectorAll('.pose').forEach(btn=>btn.onclick=()=>{Object.entries(poses[btn.dataset.p]).forEach(([k,v])=>document.getElementById(k).value=v);apply()});
+document.querySelector('#reset').onclick=()=>{Object.entries(defaults).forEach(([k,v])=>document.getElementById(k).value=v);apply();syncLook()};
+document.querySelector('#swap').onclick=()=>{const x=female.root.position.x;female.root.position.x=male.root.position.x;male.root.position.x=x};
+document.querySelector('#scene').onchange=e=>{const v=e.target.value;scene.background.set(({room:'#c8dfed',park:'#a8d5a2',stage:'#4b456b',sunset:'#efb18a'})[v]);floor.material.color.set(v==='park'?'#76a96a':v==='stage'?'#343044':v==='sunset'?'#9b6856':'#c9c1b6')};
+function snapshot(ch){return {kind:ch.kind,values:read(),skin:document.querySelector('#skin').value,hair:document.querySelector('#hair').value,eyes:document.querySelector('#eyes').value,hairStyle:document.querySelector('#hairStyle').value,outfit:document.querySelector('#outfit').value,jacket:document.querySelector('#jacket').value,accessory:document.querySelector('#accessory').checked,shoes:document.querySelector('#shoes').checked}}
+document.querySelector('#save').onclick=()=>{localStorage.setItem('charStudioSave',JSON.stringify({female:snapshot(female),male:snapshot(male)}));document.querySelector('#status').textContent='บันทึกตัวละครทั้งสองไว้ในเบราว์เซอร์แล้ว'};
+document.querySelector('#load').onclick=()=>{const raw=localStorage.getItem('charStudioSave');if(!raw){document.querySelector('#status').textContent='ยังไม่พบข้อมูลที่บันทึก';return}const data=JSON.parse(raw);const d=data[active.kind];Object.entries(d.values).forEach(([k,v])=>document.getElementById(k).value=v);for(const [id,key] of [['skin','skin'],['hair','hair'],['eyes','eyes'],['hairStyle','hairStyle'],['outfit','outfit'],['jacket','jacket']])document.getElementById(id).value=d[key];document.querySelector('#accessory').checked=d.accessory;document.querySelector('#shoes').checked=d.shoes;apply();syncLook();document.querySelector('#status').textContent='โหลดข้อมูลตัวละครแล้ว'};
+new ResizeObserver(()=>{renderer.setSize(stage.clientWidth,stage.clientHeight);camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix()}).observe(stage);
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();apply();syncLook();
+</script></body></html>
