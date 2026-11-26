@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>3D Anime Character Studio</title>
+<style>
+:root{--bg:#0f1020;--panel:#191b30;--panel2:#22243b;--ink:#f5f4ff;--muted:#a5a7c4;--pink:#ff77b7;--purple:#a88bff;--line:#30324b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px system-ui,-apple-system,"Segoe UI",sans-serif}
+header{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--line);background:#141529;position:sticky;top:0;z-index:5}
+.brand{font-weight:800;font-size:17px}.brand span{color:var(--pink)}button,select{color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit}button:hover{border-color:var(--pink)}button.active{background:linear-gradient(135deg,#a88bff,#ff77b7);color:#161427;border:0;font-weight:700}
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;min-height:calc(100vh - 58px)}#stage{position:relative;min-height:650px;background:radial-gradient(ellipse at 50% 40%,#41446a,#20213b 48%,#101120);overflow:hidden}canvas{display:block;width:100%;height:100%}
+#toolbar{position:absolute;top:14px;left:14px;display:flex;gap:8px;flex-wrap:wrap;max-width:75%}.chip{background:#151629bb;border:1px solid #ffffff25;padding:8px 10px;border-radius:12px;backdrop-filter:blur(8px)}
+#hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:#141529bb;color:var(--muted);padding:8px 12px;border-radius:12px;text-align:center;white-space:nowrap}
+#panel{background:var(--panel);border-left:1px solid var(--line);overflow:auto;max-height:calc(100vh - 58px)}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;position:sticky;top:0;background:var(--panel);z-index:3}.tabs button{padding:8px 5px;font-size:12px}.content{padding:14px}.section{margin-bottom:18px}.section h3{font-size:14px;margin:0 0 10px;color:#e8e4ff}.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0}.row label{color:#d5d4e8;font-size:13px}.row output{color:var(--pink);font-size:12px;min-width:36px;text-align:right}.slider{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin:12px 0}.slider label{font-size:13px;color:#d6d6e9}.slider output{color:var(--pink);font-size:12px}.slider input{grid-column:1/-1;width:100%;accent-color:var(--pink)}.buttons{display:flex;flex-wrap:wrap;gap:8px}.buttons button{flex:1;min-width:100px}.colorrow{display:flex;gap:8px;flex-wrap:wrap}.colorrow button{width:32px;height:32px;padding:0;border-radius:50%;border:2px solid #ffffff25}.select{width:100%;margin:5px 0 12px}.hide{display:none}.small{font-size:12px;color:var(--muted)}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.card{background:var(--panel2);border-radius:14px;padding:12px;margin-bottom:10px}.footer{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}.footer button{flex:1}
+@media(max-width:850px){main{grid-template-columns:1fr;grid-template-rows:minmax(420px,55vh) auto}#stage{min-height:420px}#panel{max-height:none;border-left:0;border-top:1px solid var(--line)}.tabs{grid-template-columns:repeat(4,1fr)}#hint{font-size:11px;white-space:normal;width:90%}}
+</style>
+</head>
+<body>
+<header><div class="brand">✦ <span>Anime</span> Character Studio</div><div class="buttons" style="flex:0;flex-wrap:nowrap"><button id="saveBtn">บันทึก</button><button id="loadBtn">โหลด</button></div></header>
+<main>
+<section id="stage"><div id="toolbar"><button id="genderBtn" class="chip">♀ ตัวละครหญิง</button><button id="addBtn" class="chip">＋ เพิ่มตัวละคร</button><button id="switchBtn" class="chip">⇄ เลือกตัว</button><button id="resetCam" class="chip">⌖ กล้อง</button></div><div id="hint">ลากเพื่อหมุน • Scroll / pinch เพื่อซูม • แตะค้างเพื่อเลื่อน</div></section>
+<aside id="panel"><nav class="tabs"><button class="active" data-tab="face">ใบหน้า</button><button data-tab="body">รูปร่าง</button><button data-tab="outfit">เสื้อผ้า</button><button data-tab="pose">ท่าทาง</button></nav>
+<div class="content">
+<div id="face" class="tabcontent">
+<div class="section"><h3>Face & Hair</h3>
+<div class="row"><label>ทรงผม</label></div><select id="hairStyle" class="select"><option value="short">ผมสั้น</option><option value="long">ผมยาว</option><option value="bob">ผมบ๊อบ</option><option value="spiky">ผมแหลม</option><option value="curly">ผมหยิก</option><option value="pony">หางม้า</option><option value="bald">หัวโล้น</option></select>
+<div class="slider"><label>ความกว้างใบหน้า</label><output id="faceWidthOut"></output><input id="faceWidth" type="range" min=".75" max="1.25" step=".01" value="1"></div>
+<div class="slider"><label>ขนาดดวงตา</label><output id="eyeSizeOut"></output><input id="eyeSize" type="range" min=".75" max="1.35" step=".01" value="1"></div>
+<div class="slider"><label>ระยะห่างตา</label><output id="eyeGapOut"></output><input id="eyeGap" type="range" min=".75" max="1.3" step=".01" value="1"></div>
+<div class="slider"><label>ขนาดปาก</label><output id="mouthOut"></output><input id="mouth" type="range" min=".7" max="1.3" step=".01" value="1"></div>
+<div class="row"><label>สีผิว</label></div><div class="colorrow" id="skinColors"></div>
+<div class="row"><label>สีตา</label></div><div class="colorrow" id="eyeColors"></div>
+<div class="row"><label>สีผม</label></div><div class="colorrow" id="hairColors"></div>
+</div></div>
+<div id="body" class="tabcontent hide"><div class="section"><h3>Body proportions</h3>
+<div class="slider"><label>ความสูง</label><output id="heightOut"></output><input id="height" type="range" min=".8" max="1.25" step=".01" value="1"></div>
+<div class="slider"><label>ความอวบ</label><output id="bulkOut"></output><input id="bulk" type="range" min=".8" max="1.25" step=".01" value="1"></div>
+<div class="slider"><label>ความกว้างไหล่</label><output id="shoulderOut"></output><input id="shoulder" type="range" min=".75" max="1.35" step=".01" value="1"></div>
+<div class="slider"><label>ความยาวขา</label><output id="legOut"></output><input id="leg" type="range" min=".8" max="1.25" step=".01" value="1"></div>
+<div class="slider"><label>ขนาดศีรษะ</label><output id="headOut"></output><input id="head" type="range" min=".8" max="1.25" step=".01" value="1"></div>
+</div></div>
+<div id="outfit" class="tabcontent hide"><div class="section"><h3>Wardrobe</h3>
+<div class="row"><label>ชุด</label></div><select id="outfitStyle" class="select"><option value="casual">Casual</option><option value="uniform">Academy</option><option value="dress">Dress</option><option value="sport">Sport</option><option value="coat">Coat</option></select>
+<div class="row"><label>สีชุดหลัก</label></div><div class="colorrow" id="clothColors"></div>
+<div class="row"><label>รองเท้า</label></div><select id="shoeStyle" class="select"><option value="boots">Boots</option><option value="sneakers">Sneakers</option><option value="heels">Heels</option></select>
+<div class="row"><label>เครื่องประดับ</label></div><select id="accessory" class="select"><option value="none">ไม่มี</option><option value="necklace">สร้อยคอ</option><option value="glasses">แว่น</option><option value="earrings">ต่างหู</option></select>
+</div></div>
+<div id="pose" class="tabcontent hide"><div class="section"><h3>Pose presets</h3><div class="buttons" id="poseButtons"></div></div>
+<div class="section"><h3>Expression</h3><div class="buttons" id="emotionButtons"></div></div>
+<div class="section"><h3>คู่ / Duo</h3><div class="buttons" id="interactionButtons"></div><div class="slider"><label>ระยะห่าง</label><output id="distanceOut"></output><input id="distance" type="range" min="0.5" max="3.5" step=".05" value="1.7"></div></div>
+<div class="section"><h3>ฉาก</h3><select id="scene" class="select"><option value="studio">Studio</option><option value="room">ห้องส่วนตัว</option><option value="park">สวน</option><option value="sunset">พระอาทิตย์ตก</option><option value="night">กลางคืน</option><option value="stage">เวที</option></select></div>
+<div class="section"><h3>Joint controls (prototype)</h3><div class="slider"><label>ยกแขน</label><output id="armOut"></output><input id="arm" type="range" min="-1.4" max="1.4" step=".05" value="0"></div><div class="slider"><label>งอเข่า</label><output id="kneeOut"></output><input id="knee" type="range" min="0" max="1.4" step=".05" value="0"></div></div></div>
+<div class="card small">ตัวละครสร้างด้วย geometry ใน Three.js เป็นโมเดลต้นแบบ 3D ปรับได้ ไม่ใช่โมเดลอนิเมะสำเร็จรูปที่มี rig เต็มรูปแบบ</div>
+</div><div class="footer"><button id="exportBtn">Export JSON</button><button id="importBtn">Import JSON</button><input type="file" id="fileInput" accept=".json" hidden></div>
+</aside></main>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+const stage=document.getElementById('stage'),renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#292b49');scene.fog=new THREE.Fog('#292b49',12,35);
+const camera=new THREE.PerspectiveCamera(35,stage.clientWidth/stage.clientHeight,.1,100);camera.position.set(0,3.1,8);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,2.2,0);controls.enableDamping=true;controls.minDistance=3;controls.maxDistance=13;controls.maxPolarAngle=Math.PI*.85;
+scene.add(new THREE.HemisphereLight(0xbfcaff,0x3b2846,2));
+const key=new THREE.DirectionalLight(0xffe3d0,3);key.position.set(-4,7,5);key.castShadow=true;scene.add(key);const rim=new THREE.DirectionalLight(0xa7b8ff,2);rim.position.set(4,5,-4);scene.add(rim);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(30,64),new THREE.MeshStandardMaterial({color:'#454669',roughness:.8}));ground.rotation.x=-Math.PI/2;ground.position.y=-.04;ground.receiveShadow=true;scene.add(ground);
+const outlineMat=new THREE.MeshBasicMaterial({color:'#171323'}),defaultSkin='#f4c9b5',palette=['#ff78b7','#a78bfa','#63c9c9','#f5c36a','#91d39b','#e6e6f2','#30344c','#e47d7d'];
+let actors=[],active=0,duo=false,interaction='none',sceneType='studio';
+const colors={skin:'#f4c9b5',eye:'#7b85db',hair:'#342746',cloth:'#a78bfa'};
+function mat(c){return new THREE.MeshToonMaterial({color:c})}
+function meshGeo(g,c,parent,outline=true){let m=new THREE.Mesh(g,mat(c));m.castShadow=true;m.receiveShadow=true;parent.add(m);if(outline){let o=new THREE.Mesh(g,outlineMat);o.scale.setScalar(1.035);o.position.copy(m.position);o.rotation.copy(m.rotation);o.castShadow=false;parent.add(o);m.userData.outline=o;}return m}
+function ell(parent,c,pos,scale){let m=meshGeo(new THREE.SphereGeometry(1,16,12),c,parent);m.position.set(...pos);m.scale.set(...scale);if(m.userData.outline){m.userData.outline.position.copy(m.position);m.userData.outline.scale.copy(m.scale).multiplyScalar(1.035)}return m}
+function capsule(parent,c,pos,scale){let m=meshGeo(new THREE.CapsuleGeometry(.5,.8,4,8),c,parent);m.position.set(...pos);m.scale.set(...scale);return m}
+function box(parent,c,pos,scale){let m=meshGeo(new THREE.BoxGeometry(1,1,1),c,parent);m.position.set(...pos);m.scale.set(...scale);return m}
+function createActor(gender='female'){
+ let root=new THREE.Group();scene.add(root);let parts={};let data={gender,faceWidth:1,eyeSize:1,eyeGap:1,mouth:1,height:1,bulk:1,shoulder:1,leg:1,head:1,hairStyle:'short',skin:defaultSkin,eye:'#7b85db',hair:'#342746',cloth:'#a78bfa',outfitStyle:'casual',shoeStyle:'boots',accessory:'none',emotion:'smile',pose:'stand',arm:0,knee:0};
+ function rebuild(){while(root.children.length)root.remove(root.children[0]);parts={};let s=data.skin,c=data.cloth;root.scale.y=data.height;
+ let body=ell(root,c,[0,2.15,0],[.48*data.bulk,.7,.28]);body.scale.x=.48*data.bulk*data.shoulder;
+ parts.torso=body;ell(root,s,[0,2.92,0],[.19,.23,.18]);let head=ell(root,s,[0,3.38,0],[.34*data.faceWidth*data.head,.43*data.head,.31]);parts.head=head;
+ // ears
+ ell(root,s,[-.34,3.36,0],[.07,.11,.07]);ell(root,s,[.34,3.36,0],[.07,.11,.07]);
+ // eyes, whites and iris, placed front
+ for(let side of [-1,1]){let x=side*.115*data.eyeGap;ell(root,'#fff4ef',[x,3.46,.275],[.085*data.eyeSize,.105*data.eyeSize,.045]);ell(root,data.eye,[x,3.46,.315],[.052*data.eyeSize,.065*data.eyeSize,.027]);ell(root,'#171323',[x,3.455,.34],[.025,.04,.015]);ell(root,'#ffffff',[x-.018,3.48,.355],[.018,.02,.012]);}
+ // nose tiny, mouth smile
+ ell(root,s,[0,3.31,.31],[.028,.035,.028]);let mouth=ell(root,data.emotion==='surprised'?'#8d4257':'#a64b5b',[0,3.235,.308],[.045*data.mouth,data.emotion==='surprised'?.045:.015,.012]);parts.mouth=mouth;
+ if(data.emotion==='blush'||data.emotion==='shy'||data.emotion==='smile'){ell(root,'#f48e9c',[-.18,3.29,.28],[.06,.035,.015]);ell(root,'#f48e9c',[.18,3.29,.28],[.06,.035,.015]);}
+ // hair cap and style strands
+ if(data.hairStyle!=='bald'){ell(root,data.hair,[0,3.68,0],[.36*data.head,.25*data.head,.33]);if(['long','pony'].includes(data.hairStyle)){ell(root,data.hair,[-.25,3.2,-.05],[.12,.52,.14]);ell(root,data.hair,[.25,3.2,-.05],[.12,.52,.14]);}if(data.hairStyle==='bob'){ell(root,data.hair,[0,3.25,-.02],[.36,.28,.28]);}if(data.hairStyle==='spiky'){for(let i=0;i<7;i++){let a=i/7*Math.PI*2;let p=ell(root,data.hair,[Math.cos(a)*.2,3.78+Math.sin(a)*.07,Math.sin(a)*.2],[.13,.22,.12]);p.rotation.z=Math.cos(a)*-.6;}}else{for(let i=0;i<4;i++)ell(root,data.hair,[-.18+i*.12,3.78,.2],[.12,.18,.1]);}if(data.hairStyle==='curly'){for(let i=0;i<10;i++)ell(root,data.hair,[(Math.random()-.5)*.5,3.72+(Math.random()-.5)*.2,(Math.random()-.5)*.45],[.12,.12,.12]);}if(data.hairStyle==='pony')ell(root,data.hair,[.38,3.6,-.25],[.15,.45,.15]);}
+ // outfit layers
+ if(data.outfitStyle==='dress'){ell(root,c,[0,1.65,0],[.52,.62,.36]);}else if(data.outfitStyle==='coat'){box(root,c,[0,2.1,.02],[.95,1.15,.4]);}else if(data.outfitStyle==='sport'){ell(root,c,[0,2.1,0],[.5,.65,.32]);}else {ell(root,c,[0,2.1,0],[.49,.65,.32]);}
+ // arms with pivots
+ for(let side of [-1,1]){let pivot=new THREE.Group();pivot.position.set(side*.52,2.55,0);root.add(pivot);parts['arm'+side]=pivot;capsule(pivot,s,[side*.08,-.35,0],[.14,.5,.14]);let fore=new THREE.Group();fore.position.set(side*.08,-.65,0);pivot.add(fore);parts['fore'+side]=fore;capsule(fore,s,[side*.02,-.28,.02],[.12,.38,.12]);ell(fore,s,[side*.02,-.5,.03],[.13,.13,.12]);}
+ // legs and shoes
+ for(let side of [-1,1]){let legGroup=new THREE.Group();legGroup.position.set(side*.19,1.55,0);root.add(legGroup);parts['leg'+side]=legGroup;capsule(legGroup,c,[0,-.45,0],[.17,.55*data.leg,.17]);capsule(legGroup,s,[0,-.92*data.leg,0],[.14,.42*data.leg,.14]);ell(legGroup,'#28273d',[0,-1.17*data.leg,.08],[.18,.1,.28]);}
+ if(data.accessory==='necklace'){ell(root,'#e7c36a',[0,2.75,.22],[.08,.08,.04]);}
+ if(data.accessory==='glasses'){box(root,'#2b2b45',[-.12,3.45,.31],[.18,.09,.04]);box(root,'#2b2b45',[.12,3.45,.31],[.18,.09,.04]);}
+ if(data.accessory==='earrings'){ell(root,'#e7c36a',[-.35,3.25,.02],[.04,.08,.04]);ell(root,'#e7c36a',[.35,3.25,.02],[.04,.08,.04]);}
+ applyPose();}
+ function applyPose(){if(parts.arm1){parts.arm1.rotation.z=data.arm;parts['arm-1'].rotation.z=-data.arm;}if(parts.fore1){parts.fore1.rotation.z=data.arm*.3;parts['fore-1'].rotation.z=-data.arm*.3;}if(parts.leg1){parts.leg1.rotation.z=data.knee*.3;parts['leg-1'].rotation.z=-data.knee*.3;}}
+ rebuild();return {root,data,parts,rebuild,applyPose};
+}
+function addActor(g='female'){let a=createActor(g);actors.push(a);if(actors.length===2)duo=true;arrange();return a}
+addActor('female');
+function arrange(){actors.forEach((a,i)=>{a.root.position.x=duo?(i===0?-Number(distance.value)/2:Number(distance.value)/2):0;a.root.rotation.y= i===1?Math.PI:0;});}
+const distance=document.getElementById('distance');
+function rebuildActive(){actors[active].rebuild();arrange();}
+document.getElementById('genderBtn').onclick=()=>{let d=actors[active].data;d.gender=d.gender==='female'?'male':'female';document.getElementById('genderBtn').textContent=d.gender==='female'?'♀ ตัวละครหญิง':'♂ ตัวละครชาย';rebuildActive();};
+document.getElementById('addBtn').onclick=()=>{if(actors.length>=2){alert('รองรับตัวละครพร้อมกันสูงสุด 2 คน');return}addActor('male');active=1;duo=true;document.getElementById('switchBtn').textContent='⇄ ตัวละคร 2';rebuildActive();};
+document.getElementById('switchBtn').onclick=()=>{if(actors.length<2)return;active=1-active;syncUI();};
+document.getElementById('resetCam').onclick=()=>{camera.position.set(0,3.1,8);controls.target.set(0,2.2,0);controls.update();};
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tabcontent').forEach(x=>x.classList.add('hide'));document.getElementById(b.dataset.tab).classList.remove('hide');});
+function colorButtons(id,key,values){let el=document.getElementById(id);values.forEach(v=>{let b=document.createElement('button');b.style.background=v;b.title=v;b.onclick=()=>{actors[active].data[key]=v;rebuildActive();};el.appendChild(b);});}
+colorButtons('skinColors','skin',['#f4c9b5','#ffe0c6','#d8a47f','#9b654c','#6d493b','#f3d9a7']);
+colorButtons('eyeColors','eye',['#7b85db','#42b9a9','#805a45','#e4a25a','#343d75','#e06b93']);
+colorButtons('hairColors','hair',['#342746','#f1d28a','#8b4e35','#242b3c','#e878a9','#e8e8ee','#71a4cf','#7652a2']);
+colorButtons('cloth','cloth',palette);
+const poseList=[['ยืน','stand'],['นั่ง','sit'],['เดิน','walk'],['โบกมือ','wave'],['กอด','hug'],['โรแมนติก','romantic']];
+poseList.forEach(([label,val])=>{let b=document.createElement('button');b.textContent=label;b.onclick=()=>{actors[active].data.pose=val;setPose(val);};document.getElementById('poseButtons').appendChild(b);});
+['ยิ้ม','เขิน','ดีใจ','ตกใจ'].forEach((v,i)=>{let b=document.createElement('button');b.textContent=v;b.onclick=()=>{actors[active].data.emotion=['smile','shy','blush','surprised'][i];rebuildActive();};document.getElementById('emotionButtons').appendChild(b);});
+[['จับมือ','hand'],['กอดกัน','hug'],['จูบ','kiss'],['คุย','talk'],['ยืนใกล้','close']].forEach(([v,id])=>{let b=document.createElement('button');b.textContent=v;b.onclick=()=>{interaction=id;if(actors.length<2)addActor('male');duo=true;if(id==='close')distance.value=1;if(id==='hug'||id==='kiss'||id==='hand')distance.value=.65;arrange();actors.forEach((a,i)=>{a.data.pose=id;a.data.arm=id==='hand'?.7:id==='hug'?-.6:0;a.rebuild();});};document.getElementById('interactionButtons').appendChild(b);});
+function setPose(p){let d=actors[active].data;d.arm=p==='wave'?1:p==='hug'?.8:p==='romantic'?.55:0;d.knee=p==='sit'?1:p==='walk'?.4:0;actors[active].rebuild();}
+const rangeKeys=['faceWidth','eyeSize','eyeGap','mouth','height','bulk','shoulder','leg','head','arm','knee'];
+rangeKeys.forEach(k=>{let el=document.getElementById(k);el.addEventListener('input',()=>{let v=Number(el.value);actors[active].data[k]=v;document.getElementById(k+'Out').textContent=v.toFixed(2);if(['arm','knee'].includes(k))actors[active].applyPose();else rebuildActive();});});
+['hairStyle','outfitStyle','shoeStyle','accessory'].forEach(k=>document.getElementById(k).addEventListener('change',e=>{actors[active].data[k]=e.target.value;rebuildActive();}));
+distance.addEventListener('input',()=>{document.getElementById('distanceOut').textContent=distance.value;arrange();});
+document.getElementById('scene').addEventListener('change',e=>{sceneType=e.target.value;const m={studio:'#292b49',room:'#48384e',park:'#294b3b',sunset:'#8b4b61',night:'#14162d',stage:'#46405d'};scene.background=new THREE.Color(m[sceneType]);scene.fog.color=new THREE.Color(m[sceneType]);ground.material.color=new THREE.Color(m[sceneType]);});
+function syncUI(){let d=actors[active].data;document.getElementById('genderBtn').textContent=d.gender==='female'?'♀ ตัวละครหญิง':'♂ ตัวละครชาย';rangeKeys.forEach(k=>{let el=document.getElementById(k);el.value=d[k];document.getElementById(k+'Out').textContent=Number(d[k]).toFixed(2);});['hairStyle','outfitStyle','shoeStyle','accessory'].forEach(k=>document.getElementById(k).value=d[k]);}
+document.getElementById('saveBtn').onclick=()=>{localStorage.setItem('animeStudioSave',JSON.stringify({actors:actors.map(a=>a.data),active,sceneType,distance:distance.value,interaction}));alert('บันทึกข้อมูลในเครื่องเรียบร้อย!');};
+document.getElementById('loadBtn').onclick=()=>{let s=localStorage.getItem('animeStudioSave');if(!s){alert('ยังไม่มีข้อมูลที่บันทึก');return}loadData(JSON.parse(s));};
+function loadData(s){actors.forEach(a=>scene.remove(a.root));actors=[];(s.actors||[]).slice(0,2).forEach(d=>{let a=createActor(d.gender);Object.assign(a.data,d);a.rebuild();actors.push(a);});active=s.active||0;duo=actors.length>1;distance.value=s.distance||1.7;interaction=s.interaction||'none';document.getElementById('scene').value=s.sceneType||'studio';sceneType=s.sceneType||'studio';document.getElementById('scene').dispatchEvent(new Event('change'));syncUI();arrange();}
+document.getElementById('exportBtn').onclick=()=>{let s={actors:actors.map(a=>a.data),active,sceneType,distance:distance.value,interaction};let blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download='anime-character.json';a.click();URL.revokeObjectURL(url);};
+document.getElementById('importBtn').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{loadData(JSON.parse(r.result));}catch{alert('ไฟล์ JSON ไม่ถูกต้อง');}};r.readAsText(f);};
+syncUI();document.getElementById('distanceOut').textContent=distance.value;
+function resize(){renderer.setSize(stage.clientWidth,stage.clientHeight);camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera);}animate();
+</script></body></html>
